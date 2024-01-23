@@ -13,63 +13,6 @@ import (
 
 var urls = make(map[string]string)
 
-type ErrResponse struct {
-	Err            error `json:"-"` // low-level runtime error
-	HTTPStatusCode int   `json:"-"` // http response status code
-
-	StatusText string `json:"status"`          // user-level status message
-	AppCode    int64  `json:"code,omitempty"`  // application-specific error code
-	ErrorText  string `json:"error,omitempty"` // application-level error message, for debugging
-}
-
-type Link struct {
-	ID  string `json:"id"`
-	URL string `json:"url"` // the author
-}
-
-type LinkRequest struct {
-	*Link
-
-	ProtectedID string `json:"id"` // override 'id' json to have more control
-}
-
-type LinkResponse struct {
-	*Link
-
-	// We add an additional field to the response here.. such as this
-	// elapsed computed property
-	Elapsed int64 `json:"elapsed"`
-}
-
-func (a *LinkRequest) Bind(r *http.Request) error {
-	if a.Link == nil {
-		return errors.New("missing required Article fields.")
-	}
-
-	a.ProtectedID = "" // unset the protected ID
-	return nil
-}
-
-func ErrInvalidRequest(err error) render.Renderer {
-	return &ErrResponse{
-		Err:            err,
-		HTTPStatusCode: 400,
-		StatusText:     "Invalid request.",
-		ErrorText:      err.Error(),
-	}
-}
-
-func (e *ErrResponse) Render(w http.ResponseWriter, r *http.Request) error {
-	render.Status(r, e.HTTPStatusCode)
-	return nil
-}
-
-func (rd *LinkResponse) Render(w http.ResponseWriter, r *http.Request) error {
-	// Pre-processing before a response is marshalled and sent across the wire
-	rd.Elapsed = 10
-	return nil
-}
-
 func handleShorten(w http.ResponseWriter, r *http.Request) {
 
 	data := &LinkRequest{}
@@ -142,7 +85,6 @@ func main() {
 	r.Use(middleware.Recoverer)
 
 	r.Route("/", func(r chi.Router) {
-		// r.Get("/", handleForm)
 		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("Hi"))
 		})
@@ -155,3 +97,52 @@ func main() {
 
 	http.ListenAndServe(":3030", r)
 }
+
+type Link struct {
+	URL string `json:"url"`
+}
+
+type LinkRequest struct {
+	*Link
+}
+
+func (a *LinkRequest) Bind(r *http.Request) error {
+	if a.Link == nil {
+		return errors.New("missing required Article fields.")
+	}
+
+	return nil
+}
+
+type LinkResponse struct {
+	*Link
+}
+
+func (rd *LinkResponse) Render(w http.ResponseWriter, r *http.Request) error {
+
+	return nil
+}
+
+type ErrResponse struct {
+	Err            error `json:"-"`
+	HTTPStatusCode int   `json:"-"`
+
+	StatusText string `json:"status"`
+	AppCode    int64  `json:"code,omitempty"`
+	ErrorText  string `json:"error,omitempty"` 
+}
+
+func (e *ErrResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	render.Status(r, e.HTTPStatusCode)
+	return nil
+}
+
+func ErrInvalidRequest(err error) render.Renderer {
+	return &ErrResponse{
+		Err:            err,
+		HTTPStatusCode: 400,
+		StatusText:     "Invalid request.",
+		ErrorText:      err.Error(),
+	}
+}
+
