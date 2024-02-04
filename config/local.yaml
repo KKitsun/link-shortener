@@ -3,7 +3,7 @@ http_server:
   port: "8033"
 
 db:
-  host: "localhost"
+  host: "postgres_db"
   port: "5432"
   user: "postgres"
   dbname: "linkShortenerDB"
