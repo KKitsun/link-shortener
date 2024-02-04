@@ -1,12 +1,27 @@
 # Cервіс скорочення посилань на Go
-Сервіс має два ендпоінти: створити код для скороченого посилання, отримати повне посилання за кодом. Для збереження даних використовується PostgreSQL. Як бібліотеку для побудови API використано https://github.com/go-chi/chi.
+Сервіс має два ендпоінти: 
++ Cтворити код для скороченого посилання (POST with json payload {"url":"someURL"}):
+```
+http://localhost:8033/url
+```
 
-## Пояснення щодо запуску
-Щоб коректно запустити програму необхідно у кореневій папці проєкту створити файл збереження локальних змінних середовища із назвою "local.env".
-У самому файлі необхідно вказати наступні змінні:
++ Отримати повне посилання за кодом:
 
 ```
-CONFIG_PATH=./config // шлях до каталогу, що містить файл конфігурації
-CONFIG_NAME=local // назва файлу конфігурації
-POSTGRES_PASSWORD=password // пароль для користувача postgres для з'єднання з базою даних
+http://localhost:8033/url/{alias}
 ```
+
+Для збереження даних використовується PostgreSQL. Як бібліотеку для побудови API використано https://github.com/go-chi/chi.
+
+## Пояснення щодо першого запуску
+
+```
+# drop any persistent state to make sure you are working with clean install
+$ docker compose down -v && docker compose pull
+# spin everything up
+$ docker compose up -d
+# wait while environment initialization is complete
+$ docker compose logs -f
+```
+
+Після цього має бути отриман доступ до сервісу за адресою http://localhost:8033
